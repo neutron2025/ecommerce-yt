@@ -7,7 +7,6 @@ import (
 	"net/http"
 	"time"
 
-	// "github.com/akhil/ecommerce-yt/models"
 	"github.com/gin-gonic/gin"
 
 	"github.com/neutron2025/ecommerce-yt/database"
@@ -28,7 +27,7 @@ func NewApplication(prodCollection, userCollection *mongo.Collection) *Applicati
 		userCollection: userCollection,
 	}
 }
-func (app *Application) AddToCart() gin.Handler {
+func (app *Application) AddToCart() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		productQueryID := c.Query("id")
 		if productQueryID == "" {
@@ -103,7 +102,7 @@ func GetItemFromCart() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user_id := c.Query("id")
 		if user_id == "" {
-			c.Handler("Content-Type", "application/json")
+			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, gin.H{"error": "invalid id"})
 			c.Abort()
 			return
@@ -155,7 +154,8 @@ func (app *Application) BuyFromCart() gin.HandlerFunc {
 		if err != nil {
 			c.IndentedJSON(http.StatusInternalServerError, err)
 		}
-		c.IndentedJSON("successfully placed the order")
+		c.IndentedJSON(200, "successfully placed the order")
+		c.IndentedJSON(200, "successfully placed the order")
 
 	}
 

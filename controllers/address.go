@@ -19,17 +19,18 @@ func AddAddress() gin.HandlerFunc {
 		user_id := c.Query("id")
 		if user_id == "" {
 			c.Header("Content-Type", "application/json")
+			c.JSON(http.StatusNotFound, gin.H{"error": "Invalid code"})
 			c.Abort()
 			return
 		}
-		address, err := ObjectIDFromHex(user_id)
+		address, err := primitive.ObjectIDFromHex(user_id)
 		if err != nil {
 			c.IndentedJSON(500, "Internal Server Error")
 		}
 		var addresses models.Address
 
 		addresses.Address_id = primitive.NewObjectID()
-		if err = c.IndentedJSON(&addresses); err != nil {
+		if err = c.BindJSON(&addresses); err != nil {
 			c.IndentedJSON(http.StatusNotAcceptable, err.Error())
 		}
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
@@ -40,12 +41,14 @@ func AddAddress() gin.HandlerFunc {
 		if err != nil {
 			c.IndentedJSON(500, "Internal server error")
 		}
+
 		var addressinfo []bson.M
 		if err = pointercursor.All(ctx, &addressinfo); err != nil {
 			panic(err)
 		}
+
 		var size int32
-		for _, address_no := range addaddressinfo {
+		for _, address_no := range addressinfo {
 			count := address_no["count"]
 			size = count.(int32)
 		}
@@ -69,7 +72,7 @@ func EditHomeAddress() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user_id := c.Query("id")
 		if user_id == "" {
-			c.Handler("Content-Type", "application/json")
+			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, gin.H{"Error": "Invalid Search Index"})
 			c.Abort()
 			return
@@ -85,7 +88,7 @@ func EditHomeAddress() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 		filter := bson.D{primitive.E{Key: "_id", Value: usert_id}}
-		update := bson.D{Key: "$set", Value: bson.D{primitive.E{Key: "address.0.house_name", Value: editaddress.House}, {Key: "address.0.street_name", Value: editaddress.Street}, {Key: "address.0.city_name", Value: editaddress.City}, {Key: "address.0.pin_code", Value: {editaddress.Pincode}}}}
+		update := bson.D{{Key: "$set", Value: bson.D{primitive.E{Key: "address.0.house_name", Value: editaddress.House}, {Key: "address.0.street_name", Value: editaddress.Street}, {Key: "address.0.city_name", Value: editaddress.City}, {Key: "address.0.pin_code", Value: editaddress.Pincode}}}}
 		_, err = UserCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			c.IndentedJSON(500, "Something went wrong")
@@ -102,7 +105,7 @@ func EditWorkAddress() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user_id := c.Query("id")
 		if user_id == "" {
-			c.Handler("Content-Type", "application/json")
+			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, gin.H{"Error": "Invalid Search Index"})
 			c.Abort()
 			return
@@ -118,7 +121,7 @@ func EditWorkAddress() gin.HandlerFunc {
 		var ctx, cancel = context.WithTimeout(context.Background(), 100*time.Second)
 		defer cancel()
 		filter := bson.D{primitive.E{Key: "_id", Value: usert_id}}
-		update := bson.D{Key: "$set", Value: bson.D{primitive.E{Key: "address.1.house_name", Value: editaddress.House}, {Key: "address.1.street_name", Value: editaddress.Street}, {Key: "address.1.city_name", Value: editaddress.City}, {Key: "address.1.pin_code", Value: {editaddress.Pincode}}}}
+		update := bson.D{{Key: "$set", Value: bson.D{primitive.E{Key: "address.1.house_name", Value: editaddress.House}, {Key: "address.1.street_name", Value: editaddress.Street}, {Key: "address.1.city_name", Value: editaddress.City}, {Key: "address.1.pin_code", Value: editaddress.Pincode}}}}
 		_, err = UserCollection.UpdateOne(ctx, filter, update)
 		if err != nil {
 			c.IndentedJSON(500, "something went wrong")
@@ -136,7 +139,7 @@ func DeleteAddress() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		user_id := c.Query("id")
 		if user_id == "" {
-			c.Handler("Content-Type", "application/json")
+			c.Header("Content-Type", "application/json")
 			c.JSON(http.StatusNotFound, gin.H{"Error": "Invalid Search Index"})
 			c.Abort()
 			return

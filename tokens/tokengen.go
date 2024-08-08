@@ -81,14 +81,17 @@ func UpdateAllTokens(signedtoken string, signedrefreshtoken string, userid strin
 
 	updateobj = append(updateobj, bson.E{Key: "token", Value: signedtoken})
 	updateobj = append(updateobj, bson.E{Key: "refresh_token", Value: signedrefreshtoken})
-	update_at, _ := append(updateobj, bson.E{Key: "updatedat", Value: update_at})
+	update_at, _ := time.Parse(time.RFC3339, time.Now().Format(time.RFC3339))
+
+	updateobj = append(updateobj, bson.E{Key: "update_at", Value: update_at})
 
 	upsert := true
+
 	filter := bson.M{"user_id": userid}
 	opt := options.UpdateOptions{
 		Upsert: &upsert,
 	}
-	UserData.UpdateOne(ctx, filter, bson.D{
+	_, err := UserData.UpdateOne(ctx, filter, bson.D{
 		{Key: "$set", Value: updateobj},
 	}, &opt)
 	defer cancel()
